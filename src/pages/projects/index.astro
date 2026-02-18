@@ -6,15 +6,13 @@ import PageLayout from '@/layouts/CommonPage.astro'
 import ProjectSection from '@/components/projects/ProjectSection.astro'
 import Sponsors from '@/components/projects/Sponsors.astro'
 import Sponsorship from '@/components/projects/Sponsorship.astro'
-import alipay from '@/assets/alipay-qrcode.jpg'
+import alipay from '@/assets/Alipay-qrcode.jpg'
 import KeyIcon from '@/assets/icons/key.svg'
 import wechat from '@/assets/wechat-qrcode.jpg'
 
 const headings = [
   { depth: 2, slug: 'programs', text: 'Programs' },
-  { depth: 2, slug: 'learnings', text: 'Learnings' },
   { depth: 2, slug: 'others', text: 'Others' },
-  { depth: 2, slug: 'gpg-signature', text: 'GPG Signature' },
   { depth: 2, slug: 'sponsorship', text: 'Sponsorship' }
 ]
 ---
@@ -33,7 +31,7 @@ const headings = [
   <p>Github Activities:</p>
   <p>
     <Image
-      src='https://ghchart.rshah.org/659eb9/cworld1'
+      src='https://ghchart.rshah.org/659eb9/F16wer'
       alt='github activities'
       inferSize
       loading='lazy'
@@ -51,15 +49,17 @@ const headings = [
   <ProjectSection
     projects={[
       {
-        name: '🎨 Astro Theme Pure',
-        description: 'A simple, fast and powerful blog & document theme built by Astro',
+        name: '🎨 F16wer\'s',
+        description: '个人博客',
         links: [
-          { type: 'github', href: 'https://github.com/cworld1/astro-theme-pure' },
-          { type: 'site', href: 'https://astro-pure.js.org/' },
-          { type: 'doc', href: 'https://astro-pure.js.org/docs/list' },
-          { type: 'release', href: 'https://www.npmjs.com/package/astro-pure' }
+          { type: 'github', href: 'https://github.com/F16wer/F16werblog' },
+          { type: 'site', href: 'https://f16wer.com/' },
+          { type: 'doc', href: 'https://astro-pure.js.org/docs/list' }
         ]
       },
+
+      /*
+      省略
       {
         name: '💄 PKU Art',
         description: 'A script to beautify pku course website',
@@ -69,8 +69,13 @@ const headings = [
           { type: 'doc', href: 'https://docs.arthals.ink/docs/pku-art' }
         ]
       }
+      */
+
     ]}
   />
+
+  {/*
+  老项目 没有 省略
   <Collapse title='Some old projects'>
     <ProjectSection
       projects={[
@@ -94,7 +99,10 @@ const headings = [
       ]}
     />
   </Collapse>
+  */}
 
+  {/*
+    学习记录（git格式的） 没有 省略
   <h2 id='learnings'>Learnings</h2>
   <ProjectSection
     class='my-2'
@@ -119,6 +127,7 @@ const headings = [
       }
     ]}
   />
+  */}
 
   <h2 id='others'>Others</h2>
   <ProjectSection
@@ -136,6 +145,8 @@ const headings = [
     ]}
   />
 
+  {/*
+    GPG签名 不懂 省略
   <h2 id='gpg-signature'>GPG Signature</h2>
   <p>
     You can verify the authenticity of the files I signed by checking the GPG signature. My GPG key
@@ -144,25 +155,39 @@ const headings = [
   <Button href='https://keys.openpgp.org/search?q=114514' title='Checkout my key' target='_blank'>
     <KeyIcon class='size-5' slot='before' />
   </Button>
+  */}
 
   <h2 id='sponsorship'>Sponsorship</h2>
-  <p>Chinese methods: <a href="https://afdian.com/a/cworld" target="_blank">Afadian</a>, Wechat or Alipay </p>
+  <p>Chinese methods: Wechat or Alipay
+    <br>
+    冰醇茶饮真的很好喝。
+   </p>
   <Sponsorship
     methods={[
       { name: 'WeChat', icon: 'wechat-pay', image: wechat },
       { name: 'Alipay', icon: 'alipay', image: alipay }
     ]}
   />
+
+  {/*
+  国际收款 没有 省略
   <p>Global methods: <a href="https://ko-fi.com/cworld0" target="_blank">Ko-fi</a> </p>
+  */}
+
   <p>Please leave a message or contact me proactively after sponsorship. My email is:
     <code style='cursor: pointer'
       onclick='const m=atob(this.textContent);alert(m);window.open(`mailto:${m}`,"_blank")'
-    >Y3dvcmxkMEBxcS5jb20=</code>
+    >MjUzNzQ0MzkyOEBxcS5jb20=</code>
     (click code to transform base64).
   </p>
+
   <p>Thanks to the following sponsors:</p>
+
+  {/*
+    捐赠者 没有 省略
   <Sponsors
     progressMax={50}
+    
     sponsors={[
       { name: 'Juyao Huang', platform: 'Wechat', amount: 5, date: '2026-01-15' },
       { name: 'hoochanlon', platform: 'Wechat', amount: 5, date: '2025-11-09' },
@@ -181,6 +206,7 @@ const headings = [
       { name: 'C*a', amount: 2, date: '2019-07-02' }
     ]}
   />
+  */}
 </PageLayout>
 
 <style>
