@@ -161,7 +161,7 @@ export const integ: IntegrationUserConfig = {
   waline: {
     enable: true,
     // Server service link
-    server: 'https://comments.f16wer.com',
+    server: 'https://comment.f16wer.com',
     // Show meta info for comments
     showMeta: false,
     // Refer https://waline.js.org/en/guide/features/emoji.html
