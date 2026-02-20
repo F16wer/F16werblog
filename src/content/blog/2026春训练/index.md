@@ -39,8 +39,10 @@ PS：明明直接备战ACM可能是提升水平更系统的方式，为什么我
 
 ## 训练日志
 
-2/20 —— 前缀和<br> T1 [AcWing 3956. 截断数组](https://www.acwing.com/problem/content/3959/).
-<br> T2 [AcWing 1230. K倍区间](https://www.acwing.com/problem/content/1232/).
+2/20 —— 前缀和 & 差分
+<br> 前缀和 T1 [AcWing 3956. 截断数组](https://www.acwing.com/problem/content/3959/).
+<br> 前缀和 T2 [AcWing 1230. K倍区间](https://www.acwing.com/problem/content/1232/).
+<br> 差分 T1 [AcWing 3729. 改变数组元素](https://www.acwing.com/problem/content/3732/).
 
 PS：思来想去，决定这里只放题号，按月另开帖子po代码，全放这还是太挤了些。
 
@@ -50,6 +52,12 @@ PS：思来想去，决定这里只放题号，按月另开帖子po代码，全�
 1 不开longlong见祖宗。——统计类问题常开longlong统计结果，可存10的18次方量级的数据。
 
 2 内存爆栈问题。——数组最好放全局变量那。对于256mb来说，longlong开1.5x10的7次方以内是安全的。
+
+3 多测清空问题：
+<br> 法1：memset(a + L, 0, (R - L + 1) * sizeof(a[0]));
+<br> 法2：在多测内用vector
+<br> 法3：直接覆盖
+
 
 ## 待办
 
