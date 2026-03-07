@@ -143,7 +143,9 @@ heroImage: { src: './lwbt.png', color: '#292626' }
 💬 *"More importantly, in contrast to ordinary differential equation-based continuous networks, closed-form networks can scale remarkably well compared with other deep learning instances. Lastly, as these models are derived from liquid networks, they show good performance in time-series modelling compared with advanced recurrent neural network models"*
 
 📝 **更重要的是，与基于ODE的连续网络相比，闭合形式网络能够与其他深度学习实例相比出色地扩展。最后，由于这些模型源自液态网络，它们在时间序列建模方面表现出色。**
+
 ✏️ **scale：扩展**
+
 ---
 
 
@@ -156,9 +158,13 @@ heroImage: { src: './lwbt.png', color: '#292626' }
 📝 **常微分方程（ODE）构建的连续神经网络架构，是一类在对具有复杂动态特性的数据进行建模时非常有用的、表达力强的模型。 这类模型将静态神经网络的"层深度"维度，以及循环神经网络（RNN）的"时间"维度，统一转化为一个连续向量场，从而实现参数共享、自适应计算，以及对非均匀采样数据的函数近似。**
 
 🧠 **对我课题的直接意义： 风场传感器数据天然就是非均匀采样的——有时数据密集，有时因为故障或遮挡出现缺失。这正是ODE类模型的强项所在。**
+
 ✏️ **ODE（Ordinary Differential Equation，常微分方程）：描述某个量随时间变化的速率的方程。**
+
 ✏️ **RNN（Recurrent Neural Network，循环神经网络）：处理序列数据的神经网络，有"记忆"，能把上一时刻的信息传到下一时刻。LSTM、GRU都是它的变体。**
+
 ✏️ **continuous vector field（连续向量场：空间中每个点都有一个箭头，表示"系统在这里会往哪个方向演化"。ODE神经网络用神经网络来定义这个场。**
+
 ✏️ **non-uniformly sampled data（非均匀采样数据）：数据采集的时间间隔不固定，比如传感器有时每秒采一次，有时断了好几秒才采一次**
 
 ---
@@ -169,8 +175,11 @@ heroImage: { src: './lwbt.png', color: '#292626' }
 📝 **这些连续深度（时间）模型在密度估计应用中展现出了潜力，同时也在序列建模和不规则采样数据建模方面表现出色。**
 
 ✏️ **density estimation（密度估计）：估计数据的概率分布，比如"这个风速值出现的概率有多大"，常用于生成模型**
+
 ✏️ **sequential data（序列数据）：有先后顺序的数据，比如一段时间内的气温记录、文字句子等**
+
 ✏️ **continuous vector field（连续向量场：空间中每个点都有一个箭头，表示"系统在这里会往哪个方向演化"。ODE神经网络用神经网络来定义这个场。**
+
 ✏️ **irregularly sampled data（不规则采样数据）：和上面的"非均匀采样"同义，强调时间间隔不等、甚至有缺失。**
 
 ---
