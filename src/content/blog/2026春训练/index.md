@@ -59,33 +59,52 @@ PS：明明直接备战ACM可能是提升水平更系统的方式，为什么我
 3/8 —— 递推
 <br> T1 [AcWing 1208. 翻硬币](https://www.acwing.com/problem/content/1210/).
 
-3/9 —— 最短路
+3/9 —— 最短路 
 <br> T1 [Dijk基本模板](https://www.luogu.com.cn/problem/P4779).
 <br> T2 [Dijk 的 堆优化 & 变体](https://www.luogu.com.cn/problem/U629163?contestId=295494).(密码:ey33).
 <br> T3 [SPFA求负环基本模板](https://www.luogu.com.cn/problem/P3385).
 <br> T4 [Floyd求传递闭包基本模板](https://www.luogu.com.cn/problem/B3611).
 
+3/10 —— DFS & 蓝桥杯特训
+<br> DFS T1[AcWing 3502. 不同路径数](https://www.acwing.com/problem/content/3505/).
+<br>[	[蓝桥杯 2022 省 A] 填空问题](https://www.luogu.com.cn/problem/P8770).
+<br>[ [蓝桥杯 2022 省 A] 求和](https://www.luogu.com.cn/problem/P8772).
+<br>[ [蓝桥杯 2022 省 A] 选数异或](https://www.luogu.com.cn/problem/P8773).
+
+3/11 —— 背包DP
+<br> 背包DP T1（完全背包）[P1616 疯狂的采药](https://www.luogu.com.cn/problem/P1616).
+<br> 背包DP T2（
+ 
 <br>PS：思来想去，决定这里只放题号，按月另开帖子po代码，全放这还是太挤了些。
 
 
 ## 一些经验/教训/值得记录的理解/备忘
 
-1 不开longlong见祖宗。——统计类问题常开longlong统计结果，可存10的18次方量级的数据。
+“小细节”：
+> <br>  不开longlong见祖宗。——统计类问题常开longlong统计结果，可存10的18次方量级的数据。<br>
+> <br>  内存爆栈问题。——数组最好放全局变量那。对于256mb来说，longlong开1.5x10的7次方以内是安全的。<br>
+> <br>  对于memset“上限”，一般填0x3f，但在程序当中检测“是否有更新过”时，则不是0x3f，实际大小是0x很多个3f，有效的检测办法是>1e18.<br>
+> <br>  计数时，用 a[++cnt] 而不是 cnt+=1 可以有效防止“多加一次”问题.
 
-2 内存爆栈问题。——数组最好放全局变量那。对于256mb来说，longlong开1.5x10的7次方以内是安全的。
+多测清空问题：
+> <br> 对于数组：
+> <br> 法1：memset(a + L, 0, (R - L + 1) * sizeof(数据类型));
+> <br> 法2：直接覆盖<br>
+> <br> 对于vector,要用for挨个.clear().<br>
+> <br> 队列/栈：while(!q.empty（）)   q.pop();
 
-3 多测清空问题（UPD:3/9）：
-<br> 法1：memset(a + L, 0, (R - L + 1) * sizeof(数据类型));
-<br> 法2：在多测内用vector
-<br> 法3：直接覆盖
-<br> 对于vector,要用for挨个.clear().
-<br> 队列/栈：while(!q.empty（）)   q.pop();
+异或运算：
+> <br> 相同为0，不同为1.
+> <br> 归零律：a⊕a=0 （自己和自己异或，底牌全消）
+> <br> 恒等律：a⊕0=a （和 0 异或，保持真我）
+> <br> 交换律与结合律：a⊕b⊕c=a⊕c⊕b （随便打乱顺序，结果不变）
+> <br> 自反律：如果 a⊕b=c，那么必然有 a⊕c=b 和 b⊕c=a.
 
-4 对于一些无法避免的枚举层数较多的问题（如[AcWing 1221](https://www.acwing.com/problem/content/1223/)），可以预先计算并存储。
+预处理：
+> <br> 对于一些无法避免的枚举层数较多的问题（如[AcWing 1221](https://www.acwing.com/problem/content/1223/)），可以预先计算并存储。
 
-5 可以考虑对 某组输入数据 依据某项值（如时间/大小）进行预处理（如排序）来简化后续处理 如sort(a,a+n).
+> <br> 可以考虑对 某组输入数据 依据某项值（如时间/大小）进行预处理（如排序）来简化后续处理 如sort(a,a+n).
 
-6 对于memset，一般填0x3f，但在程序当中检测“是否有更新过”时，则不是0x3f，实际大小是0x很多个（我不记得了）3f，有效的检测办法是>1e18.
 
 ## 已经复习过的算法复述
 
@@ -122,4 +141,4 @@ priority_queue<node vector<node>,greater<node>>;
 
 1 同余性质等基本的数论学习（在实际比赛中往往是 部分分 到 全部分 的关键，例如AcWing 1230，不知道同余的话没办法优化到一层循环，我也是看了题解才写出来的）
 
-2 重载运算符学习.
+2 重载运算符学习(已完成).

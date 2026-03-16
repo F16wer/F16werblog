@@ -2,7 +2,7 @@
 title: '连续时间神经网络的闭合解 精读 & 复现'
 publishDate: 2026-03-06
 updatedDate: 2026-03-06
-description: '这篇文章随便找的 测试一下功能'
+description: 'Here we go'
 tags:
   - 科研
   - 论文复现
@@ -11,34 +11,38 @@ language: 'English'
 heroImage: { src: './lwbt.png', color: '#292626' }
 ---
 
-## 📌 连续时间神经网络的闭合解
+# 📌 论文基本信息
 
-> 原标题：*Closed-form Continuous-time Neural Networks*  
-> 来源：Nature Machine Intelligence, Vol.4, Nov 2022  
-> 作者：Ramin Hasani, Mathias Lechner et al. (MIT)  
-> 代码：https://github.com/raminmh/CfC
+| 项目 | 内容 |
+|------|------|
+| **原标题** | Closed-form continuous-time neural networks |
+| **作者** | Ramin Hasani, Mathias Lechner et al.(MIT) |
+| **期刊** | Nature Machine Intelligence |
+| **卷期页** | Volume 4, November 2022, pp. 992–1003 |
+| **DOI** | https://doi.org/10.1038/s42256-022-00556-7 |
+| **代码** | https://github.com/raminmh/CfC |
 
 ---
 
-## 零、前言
+# 零、前言
 
 笔者在本学期正式加入了某课题组，在师姐的指点下开展了相当稚嫩的科研工作。
 <br>在掌握 Python基础 & 一些课题相关的基本概念 后，笔者开始了科研生涯的第一篇论文精读 & 复现 （仍施工中，先找了个模板）
 
-## 一、🗺️ 论文地图
+# 一、🗺️ 论文地图
 
-### 1.1 一句话概括本论文
+## 1.1 一句话概括本论文
 > 通过对LTC（液态时间常数网络）的ODE（数值微分方程）求近似闭合解，可得到一种不需要数值求解器、性能（尤其是时间序列建模）优良1到5个数量级的连续时间神经网络。
 
-### 1.2 论文解决了什么问题？
+## 1.2 论文解决了什么问题？
 - **背景问题：连续时间神经网络的表达能力受数值微分方程求解器限制**
 - **本文的解决思路：用闭合形式高效地近似求解。**
 
-### 1.3 论文的核心贡献
+## 1.3 论文的核心贡献
 1. 对LTC的动力学方程的积分给出了紧界近似闭合解。
 2. 基于此设计了新的神经网络架构CfC（不需要任何 ODE 数值求解器，性能卓越）
 
-### 1.4 和我课题的关联
+## 1.4 和我课题的关联
 笔者所研究课题的本质是不规则时间序列建模。
 而本论文的成果：
 <br>✅ 可处理不规则采样的时间序列数据
@@ -48,7 +52,7 @@ heroImage: { src: './lwbt.png', color: '#292626' }
 
 ---
 
-## 二、📖 逐节精读笔记
+# 二、📖 逐节精读笔记
 
 > 格式说明：
 > - 💬 原文引用（英文）
@@ -59,9 +63,19 @@ heroImage: { src: './lwbt.png', color: '#292626' }
 > - ✏️ 关键概念/生词
 ---
 
-### 2.1 摘要（Abstract）
+## 2.1 摘要（Abstract）
 
-#### 句1
+### 核心意思：
+- **问题：** 连续时间神经网络被ODE数值求解器拖慢
+- **方法：** 对LTC动态中的关键积分做紧界近似，得到闭合形式解
+- **结果：** 训练/推理快1~5个数量级，在时间序列任务上表现优异
+
+---
+
+### 精读
+
+- **句1**
+
 💬 *"Continuous-time neural networks are a class of machine learning systems that can tackle representation learning on spatiotemporal decision-making tasks."*
 
 📝 **连续时间神经网络是一类机器学习系统，能够处理时空决策任务上的表示学习。**
@@ -76,14 +90,16 @@ heroImage: { src: './lwbt.png', color: '#292626' }
 
 ---
 
-#### 句2
+- **句2**
+
 💬 *"These models are typically represented by continuous differential equations."*
 
 📝 **这类模型通常用连续微分方程来表示。**
 
 ---
 
-#### 句3
+- **句3**
+
 💬 *"However, their expressive power when they are deployed on computers is bottlenecked by numerical differential equation solvers."*
 
 📝 **然而，当这些模型部署到计算机上时，它们的表达能力被数值微分方程求解器所瓶颈。**
@@ -92,7 +108,8 @@ heroImage: { src: './lwbt.png', color: '#292626' }
 
 ---
 
-#### 句4
+- **句4**
+
 💬 *"This limitation has notably slowed down the scaling and understanding of numerous natural physical phenomena such as the dynamics of nervous systems."*
 
 📝 **这一限制显著减缓了对众多自然物理现象的规模化研究和理解，例如神经系统的动力学。**
@@ -101,7 +118,8 @@ heroImage: { src: './lwbt.png', color: '#292626' }
 
 ---
 
-#### 句5
+- **句5**
+
 💬 *"Ideally, we would circumvent this bottleneck by solving the given dynamical system in closed form. This is known to be intractable in general."*
 
 📝 **理想情况下，我们希望通过闭合形式求解给定的动力系统来绕过这一瓶颈。但这在一般情况下被认为是难以处理的。**
@@ -110,7 +128,8 @@ heroImage: { src: './lwbt.png', color: '#292626' }
 
 ---
 
-#### 句6
+- **句6**
+
 💬 *"Here, we show that it is possible to closely approximate the interaction between neurons and synapses—the building blocks of natural and artificial neural networks—constructed by liquid time-constant networks efficiently in closed form."*
 
 📝 **在这里，我们证明：对于由液态时间常数网络构建的神经元与突触之间的交互——自然和人工神经网络的基本构件——可以用闭合形式高效地近似。**
@@ -118,12 +137,15 @@ heroImage: { src: './lwbt.png', color: '#292626' }
 🧠 **理解：这是本论文的核心贡献**
 
 ✏️ **Neurons（神经元）：网络中的计算单元 ; Synapses（突触）：神经元之间的连接**
+
 ✏️ **Liquid Time-Constant (LTC) networks：2021年同一团队提出的前作，用生物神经元的ODE方程建模，表达能力强但有上文提出的限制”**
+
 ✏️ **Closely approximate（紧密近似）：不是精确解，但误差有严格的数学上界（论文后面会证明）**
 
 ---
 
-#### 句7 8 9
+- **句7 8 9**
+
 💬 *"To this end, we compute a tightly bounded approximation of the solution of an integral appearing in liquid time-constant dynamics that has had no known closed-form solution so far.This closed-form solution impacts the design of continuous-time and continuous-depth neural models. For instance, since time appears explicitly in closed form, the formulation relaxes the need for complex numerical solvers."*
 
 📝 **为此，我们计算了液态时间常数动力学中出现的一个积分的紧有界近似，该积分迄今为止没有已知的闭合解。 这一闭合解影响了连续时间和连续深度神经模型的设计。例如，由于时间以显式形式出现在闭合解中，该公式消除了对复杂数值求解器的需求。**
@@ -132,14 +154,16 @@ heroImage: { src: './lwbt.png', color: '#292626' }
 
 ---
 
-#### 句10
+- **句10**
+
 💬 *"Consequently, we obtain models that are between one and five orders of magnitude faster in training and inference compared with differential equation-based counterparts."*
 
 📝 **因此，与基于微分方程的对应模型相比，我们获得的模型在训练和推理速度上快了1到5个数量级。**
 
 ---
 
-#### 句11 12
+- **句11 12**
+
 💬 *"More importantly, in contrast to ordinary differential equation-based continuous networks, closed-form networks can scale remarkably well compared with other deep learning instances. Lastly, as these models are derived from liquid networks, they show good performance in time-series modelling compared with advanced recurrent neural network models"*
 
 📝 **更重要的是，与基于ODE的连续网络相比，闭合形式网络能够与其他深度学习实例相比出色地扩展。最后，由于这些模型源自液态网络，它们在时间序列建模方面表现出色。**
@@ -150,9 +174,25 @@ heroImage: { src: './lwbt.png', color: '#292626' }
 
 
 
-### 2.2 引言（Introduction）
+## 2.2 引言（Introduction）
 
-#### 第一段
+### 研究背景:
+ODE连续神经网络能建模复杂动态，但数值求解器限制了性能。
+
+### 现有方法 & 不足（Research Gap）：
+
+| 方法 | 思路 | 局限 |
+|------|------|------|
+| 状态增广（State Augmentation） | 降低ODE刚性 | 治标不治本 |
+| 根查找法（Root-finding） | 重构前向传播 | 工程复杂 |
+| 正则化方案 | 约束轨迹 | 精度损失 |
+| Hypersolver | 加速求解器 | 仍依赖求解器框架 |
+
+---
+### 精读
+
+- **第1段**
+
 💬 *"Continuous neural network architectures built by ordinary differential equations (ODEs) are expressive models useful in modelling data with complex dynamics. These models transform the depth dimension of static neural networks and the time dimension of recurrent neural networks (RNNs) into a continuous vector field, enabling parameter sharing, adaptive computations and function approximation for non-uniformly sampled data."*
 
 📝 **常微分方程（ODE）构建的连续神经网络架构，是一类在对具有复杂动态特性的数据进行建模时非常有用的、表达力强的模型。 这类模型将静态神经网络的"层深度"维度，以及循环神经网络（RNN）的"时间"维度，统一转化为一个连续向量场，从而实现参数共享、自适应计算，以及对非均匀采样数据的函数近似。**
@@ -169,7 +209,8 @@ heroImage: { src: './lwbt.png', color: '#292626' }
 
 ---
 
-#### 第二段
+- **第2段**
+
 💬 *"These continuous-depth (time) models have shown promise in density estimation applications, as well as modelling sequential and irregularly sampled data."*
 
 📝 **这些连续深度（时间）模型在密度估计应用中展现出了潜力，同时也在序列建模和不规则采样数据建模方面表现出色。**
@@ -184,9 +225,509 @@ heroImage: { src: './lwbt.png', color: '#292626' }
 
 ---
 
-### 2.3 方法（Methods）
+- **第3段**
 
-#### 核心公式记录
+💬 *"While ODE-based neural networks with careful memory and gradient propagation design perform competitively with advanced discretized recurrent models on relatively small benchmarks, their training and inference are slow owing to the use of advanced numerical differential equation (DE) solvers.This becomes even more troublesome as the complexity of the data, task and state space increases (that is, requiring more precision), for instance, in open-world problems such as medical data processing, self-driving cars, financial time-series and physics simulations."*
+
+📝 **尽管经过精心设计（记忆机制和梯度传播）的ODE神经网络，在相对小规模的基准测试上能与先进的离散循环模型相媲美，但由于依赖高级数值微分方程求解器，它们的训练和推理速度非常慢。随着数据、任务和状态空间复杂度的增加（即需要更高精度），这个问题变得更加棘手——例如医疗数据处理、自动驾驶、金融时间序列和物理仿真等现实场景。**
+
+✏️ **discretized recurrent models（离散循环模型）：就是普通的LSTM、GRU，把时间切成一步一步处理，不用ODE求解器，速度快**
+
+✏️ **sgradient propagation（梯度传播）：神经网络训练的核心机制——通过反向传播算法，把"预测错了多少"的信号从输出层传回输入层，用来更新参数**
+
+---
+
+- **第4段**
+
+💬 *"The research community has developed solutions for resolving this computational overhead and for facilitating the training of neural ODEs, for instance by relaxing the stiffness of a flow by state augmentation techniques, reformulating the forward pass as a root-finding problem, using regularization schemes or improving the inference time of the network."*
+
+📝 **研究界已提出了一些方案来解决这个计算开销问题，例如：通过状态增广降低流的刚性、将前向传播重新表述为求根问题、使用正则化方案、或改进网络的推理时间。**
+
+🧠 **理解：这些方案都是在给求解器打补丁，治标不治本。**
+
+---
+
+- **第5段**
+
+💬 *"Here, we derive a closed-form continuous-depth model that has the modelling capabilities of ODE-based models but does not require any solver to model data (Fig. 1)."*
+
+📝 **本文推导出一个闭合形式的连续深度模型，它具备ODE模型的建模能力，但完全不需要任何求解器来对数据建模。**
+
+---
+
+- **第6段**
+
+💬 *"Intuitively, in this work, we replace the integration (that is, solution) of a nonlinear DE describing the interaction of a neuron with its input nonlinear synaptic connections, with their corresponding nonlinear operators.This could be achieved in principle using functional Taylor expansions (in the spirit of the Volterra series). However, in the particular case of liquid time-constant (LTC) networks, we can leverage a closed-form expression for the system's response to input.This allows one to evaluate the system's response to exogenous input (I) and recurrent inputs from hidden states (x) as a function of time. One way of looking at this is to regard the closed-form solution as the application of a nonlinear forward operator to the inputs of each hidden state or neuron in the network, where the outputs of one neuron constitute the inputs for others.Effectively, this rests on approximating a conductance-based model with a neural mass model, of the kind used in the dynamic causal modelling of real neuronal networks."*
+
+📝 **直觉上，本文的做法是：将描述神经元与其非线性突触连接相互作用的非线性微分方程的积分求解过程，替换为对应的非线性算子。一般情况下这可以通过泛函Taylor展开（Volterra级数的思路）来实现。但对于液态时间常数（LTC）网络这一特殊情况，我们可以直接利用一个闭合形式表达式来描述系统对输入的响应。这使得我们能够将 系统对外部输入 I 和 来自隐藏状态 x 的循环输入的响应，表示为以时间为自变量的函数。可以把这个闭合形式解理解为：对网络中每个隐藏状态或神经元的输入，施加一个非线性前向算子，其中一个神经元的输出构成另一个神经元的输入。本质上，这依赖于用神经质量模型来近似电导模型——这种方法在真实神经网络的动态因果建模中已有应用。**
+
+---
+
+- **第7段**
+
+💬 *"The proposed continuous neural networks yield considerably faster training and inference speeds while being as expressive as their ODE-based counterparts.We provide a derivation for the approximate closed-form solution to a class of continuous neural networks that explicitly models time.We demonstrate how this transformation can be formulated into a novel neural model and scaled to create flexible, performant and fast neural architectures on challenging sequential datasets."*
+
+📝 **所提出的连续神经网络在训练和推理速度上大幅提升，同时保持与ODE类模型相当的表达能力。我们为一类显式建模时间的连续神经网络，提供了近似闭合形式解的推导过程。我们展示了如何将这一变换构建成一个新颖的神经网络模型，并将其扩展，在具有挑战性的序列数据集上创建灵活、高性能且快速的神经网络架构。**
+
+✏️ **derivation ： 推导**
+
+✏️ **explicitly models time（显式建模时间）：时间 t 直接出现在公式里**
+
+---
+
+- **第8段**
+
+💬 *"The proposed continuous neural networks yield considerably faster training and inference speeds while being as expressive as their ODE-based counterparts.We provide a derivation for the approximate closed-form solution to a class of continuous neural networks that explicitly models time.We demonstrate how this transformation can be formulated into a novel neural model and scaled to create flexible, performant and fast neural architectures on challenging sequential datasets."*
+
+📝 **所提出的连续神经网络在训练和推理速度上大幅提升，同时保持与ODE类模型相当的表达能力。我们为一类显式建模时间的连续神经网络，提供了近似闭合形式解的推导过程。我们展示了如何将这一变换构建成一个新颖的神经网络模型，并将其扩展，在具有挑战性的序列数据集上创建灵活、高性能且快速的神经网络架构。**
+
+✏️ **derivation ： 推导**
+
+✏️ **explicitly models time（显式建模时间）：时间 t 直接出现在公式里**
+
+---
+## 2.3 理论准备
+
+### 🔷 ① 推导神经元交互的近似闭合形式解
+
+#### 本节目的：
+建立生物学动机，推导LTC的ODE方程，并针对∫₀ᵗ f(I(s)) ds给出积分近似策略。
+
+#### 三种被深度学习忽略的生物学机制：
+
+| 机制 | 生物学含义 | 对应公式 |
+|------|-----------|---------|
+| ① 神经动态是连续过程 | 膜电位是连续变化的 | $$\frac{dx(t)}{dt} = -\frac{x(t)}{\tau} + S(t)$$ |
+| ② 突触释放是非线性的 | 突触释放远不止是标量权重 | $$S(t)=f(I(t))(A-x(t))$$ |
+| ③ 信息传播有反馈和记忆 | $$(A-x(t))$$ 构成负反馈 | 驱动力随膜电位升高而减小 |
+
+#### LTC的完整ODE方程：
+
+$$\frac{dx(t)}{dt} = -\left[\frac{1}{\tau} + f(I(t))\right]x(t) + f(I(t)) \cdot A$$
+
+
+#### 闭合形式解：
+
+$$x(t) = \left(x(0) - A\right) \cdot e^{-\left[\frac{t}{\tau} + \int_0^t f(I(s))ds\right]} \cdot f(-I(t)) + A$$
+
+#### 🎯求解思路（逻辑链）：
+
+```
+对完整ODE方程套用线性ODE通解
+       ↓
+解中出现难以处理的积分：∫₀ᵗ f(I(s)) ds
+       ↓
+I(s) 任意定义 → 无法直接求闭合形式
+       ↓
+将 I(s) 离散化为分段常数 → 积分 ≈ 求和
+       ↓
+当积分作为指数衰减的指数时，近似可证明紧
+       ↓
+得到图1右侧闭合形式解
+```
+
+---
+
+#### 精读
+
+- **第一部分：三种生物学机制**
+
+💬 *"Two neurons interact with each other through synapses as shown in Fig. 1. There are three principal mechanisms for information propagation in natural brains that are abstracted away in the current building blocks of deep learning systems."*
+
+📝 **如图1所示，两个神经元通过突触相互作用。自然大脑中有三种核心的信息传播机制，而这些机制在当前深度学习的基本构件中被抽象掉了（即被忽略了）。**
+
+🧠 **"abstracted away"是关键词——作者在说：普通神经网络为了简单，把这三种机制都扔掉了，而LTC/CfC把它们找回来了。**
+
+---
+
+- **机制① 神经动态是连续过程**
+
+💬 *"(1) neural dynamics are typically continuous processes described by DEs (see the dynamics of x(t) in Fig. 1)"*
+
+📝 **神经元膜电位x(t) 随时间连续变化，由微分方程描述(见图一中x(t)的方程)。**
+
+对应图1中间的方程：
+
+$$\frac{dx(t)}{dt} = -\frac{x(t)}{\tau} + S(t)$$
+
+| 符号 | 含义 |
+|------|------|
+| $x(t)$ | 突触后神经元的膜电位（随时间变化） |
+| $\tau$ | 神经元的时间常数，控制"遗忘速度"，τ 越大，记忆越持久 |
+| $S(t)$ | 突触电流，来自突触前神经元的输入 |
+
+ 🧠 **这个方程说的是"膜电位的变化速率 = 自然衰减 + 外部输入"。左边是变化速率，右边第一项是神经元自己慢慢"忘掉"激活（衰减），第二项是突触带来的新刺激。**
+
+
+---
+
+- **机制② 突触释放是非线性的**
+
+💬 *"(2) synaptic release is much more than scalar weights, involving a nonlinear transmission of neurotransmitters, the probability of activation of receptors and the concentration of available neurotransmitters, among other nonlinearities (see S(t) in Fig. 1)"*
+
+📝 **突触释放远不止是一个标量权重，它涉及神经递质的非线性传递、受体激活概率、可用神经递质浓度等复杂非线性过程。**
+
+对应图1左下角的公式：
+
+$$S(t) = f(I(t)) \cdot (A - x(t))$$
+
+| 符号 | 含义 |
+|------|------|
+| $f(\cdot)$ | 突触释放非线性函数，通常是 sigmoid，把输入压缩到 (0,1) |
+| $I(t)$ | 突触前神经元的输入刺激 |
+| $A$ | 突触反转电位（synaptic reversal potential），一个生物学常数 |
+| $(A - x(t))$ | 驱动力（driving force），膜电位离反转电位越远，突触电流越大 |
+
+🧠 **普通神经网络里，"突触"就是一个数字（权重 $w$）。而这里，突触是一个依赖输入和当前状态的非线性函数，表达力强得多。**
+ 
+---
+
+- **机制③ 信息传播有反馈和记忆**
+
+💬 *"(3) the propagation of information between neurons is induced by feedback and memory apparatuses (see how I(t) stimulates x(t) through a nonlinear synapse S(t) which also has a multiplicative difference of potential to the postsynaptic neuron accounting for a negative feedback mechanism)."*
+
+📝 **神经元间的信息传播由反馈和记忆机制驱动。I(t) 通过非线性突触 S(t) 影响 x(t)，而 S(t) 中的 (A−x(t)) 项构成一个负反馈机制。**
+
+🧠 **当 x(t) 越来越大、接近 A 时，(A−x(t)) 越来越小，突触电流 S(t) 自动减弱——神经元不会无限激活，系统自动稳定。这是大脑的自我保护机制。**
+ 
+---
+
+- **过渡：从生物学到LTC**
+
+💬 *"One could read I(t) as a mixture of exogenous input to the (neural) network and presynaptic inputs from other neurons that result in a depolarization x(t). This depolarization is mediated by the current S(t) that depends upon depolarization and a reversal threshold A.LTC networks, which are expressive continuous-depth models obtained by a bilinear approximation of a neural ODE formulation, are designed on the basis of these mechanisms.Correspondingly, we take their ODE semantics and approximate a closed-form solution for the scalar case of a postsynaptic neuron receiving an input stimulus from a presynaptic source through a nonlinear synapse."*
+
+📝 **I(t) 可以理解为：网络的外部输入与来自其他神经元的突触前输入的混合，共同导致膜电位去极化x(t)。这个去极化由电流 S(t) 介导，而 S(t) 依赖于去极化程度和反转阈值 A。LTC网络是基于上述三种机制设计的，它是通过对神经ODE公式进行双线性近似得到的表达力强的连续深度模型。相应地，我们采用LTC的ODE语义，为标量情形（单个突触后神经元通过非线性突触接收突触前刺激）推导近似闭合形式解。**
+
+🧠 **当 x(t) 越来越大、接近 A 时，(A−x(t)) 越来越小，突触电流 S(t) 自动减弱——神经元不会无限激活，系统自动稳定。这是大脑的自我保护机制。**
+
+✏️ **depolarization（去极化）:神经元静息时膜电位为负（约-70mV），受刺激后电位升高（变得"不那么负"），这个过程叫去极化，是神经元"被激活"的过程**
+
+✏️ **reversal threshold A（反转阈值）:当膜电位达到A 时，离子流方向反转，突触电流变为零——这是一个平衡点**
+
+✏️ **bilinear approximation（双线性近似）:把S(t)=f(I(t))(A−x(t)) 中的乘积项视为"关于 f(I(t)) 和 x(t) 各自线性"的近似，使方程变得可处理**
+
+✏️ **scalar case（标量情形）:先从最简单的单个神经元开始推导，后面再推广到整个网络。这是数学推导的标准策略：先解决简单情形，再扩展。**
+
+---
+- **第二部分：数学推导思路**
+
+💬 *"To this end, we apply the theory of linear ODEs to analytically solve the dynamics of an LTC DE as shown in Fig. 1. We then simplify the solution to the point where there is one integral left to solve."*
+
+📝 **为此，我们应用线性ODE理论解析求解图1所示的LTC微分方程，然后将解化简，直到只剩下一个积分需要求解。**
+
+把 $S(t) = f(I(t))(A - x(t))$ 代入原方程：
+
+$$\frac{dx(t)}{dt} = -\frac{x(t)}{\tau} + f(I(t))(A - x(t))$$
+
+整理后：
+
+$$\frac{dx(t)}{dt} = -\left[\frac{1}{\tau} + f(I(t))\right] x(t) + f(I(t)) \cdot A$$
+
+这是一个关于 $x(t)$ 的**一阶线性 ODE**，套用线性 ODE 的通解公式，解为：
+
+$$x(t) = (x(0) - A)\, e^{-\left[\frac{t}{\tau} + \int_0^t f(I(s))\,ds\right]} \cdot f(-I(t)) + A$$
+
+🧠 **这正是图1右侧给出的闭合形式解！其中唯一"麻烦"的部分就是指数上的积分 $\int_0^t f(I(s))\,ds$。**
+
+---
+
+- **积分求解的问题**
+
+💬 *"This integral compartment, $\int_0^t f(I(s))\,ds$, in which $f$ is a positive,continuous, monotonically increasing and bounded nonlinearity, is challenging tosolve in closed form since it has dependencies on an input signal $I(s)$ that isarbitrarily defined (such as real-world sensory readouts)."*
+
+📝 **这个积分 $\int_0^t f(I(s))\,ds$ 中，$f$ 是正的、连续的、单调递增且有界的非线性函数。由于它依赖于任意定义的输入信号 $I(s)$（比如真实世界的传感器读数），很难求出闭合形式解。**
+
+**🧠 为什么 f 要满足这些条件？**
+
+| 条件 | 原因 |
+|------|------|
+| 正（positive） | 保证突触电流方向一致，不会出现负的突触释放 |
+| 连续（continuous） | 保证数学推导中积分存在 |
+| 单调递增（monotonically increasing） | 输入越强，释放越多，符合生物学直觉 |
+| 有界（bounded） | 突触释放量有上限，防止数值爆炸 |
+
+**🔑为什么这个积分难解？**
+想象I(s) 是一段真实的风速数据——它的形状完全不规则，没有任何数学规律，所以$\int_0^t f(I(s))\,ds$ 根本没有通用的解析公式。
+
+---
+
+- **积分求解的思路**
+
+💬 *"To approach this problem, we discretize $I(s)$ into piecewise constant segmentsand obtain the discrete approximation of the integral in terms of the sum ofpiecewise constant compartments over intervals."*
+
+📝 **为解决这个问题，我们将 $I(s)$ 离散化为分段常数，把积分近似为各段上分段常数的求和。**
+
+图示理解
+
+I(s) 的真实形状（任意曲线）：<br>
+```
+     ╭──╮    ╭─╮
+    ╭╯  ╰╮  ╭╯ ╰╮
+────╯    ╰──╯   ╰────
+```
+
+分段常数近似（阶梯形）：
+```
+     ████    ██
+    █████  ████
+────█████████████────
+  t0  t1  t2  t3  t4
+```
+
+每段内 $I(s) \approx I_k$（常数），则：
+
+$$\int_0^t f(I(s))\,ds \approx \sum_k f(I_k) \cdot \Delta t_k$$
+
+---
+
+- **结尾**
+
+💬 *"This piecewise constant approximation inspired us to introduce an approximate closed-form solution for the integral f(I(s))ds that is provably tight when the integral appears as the exponent of an exponential decay, which is the case for LTCs.We theoretically justify how this closed-form solution represents LTCs' ODE semantics and is as expressive (Fig. 1)."*
+
+📝 **这个分段常数近似启发我们引入一个近似闭合形式解，当该积分作为指数衰减的指数出现时，这个近似是可证明紧的——而这正好是LTC的情形。我们从理论上证明了这个闭合形式解能够表示LTC的ODE语义，且具有同等的表达能力。**
+
+💡 **为什么"作为指数的指数"时近似特别准？**
+因为指数函数 $$e^{-x}$$ 在 $$x$$ 较大时变化非常平缓，对 $$x$$ 的小误差不敏感。换句话说，即使积分的近似有一点点偏差，$$e^{-\text{积分}}$$ 的值几乎不变——误差被指数函数"压缩"了。
+
+
+---
+
+### 🔷 ② — CfC 的效率优势.
+
+#### 本节目的：
+ 用复杂度分析量化CfC相对于ODE求解器的速度优势。
+
+#### 关于Table 1 
+
+<br>
+左半部分：求解器时间复杂度
+
+| 方法 | 复杂度 | 局部误差 | 备注 |
+|------|--------|----------|------|
+| p阶求解器 | O(Kp) | O(ε^(p+1)) | 阶数越高越精确但越慢 |
+| 自适应步长求解器 | — | O(ε̃^(p+1)) | 自动调步长，复杂度不定 |
+| Euler 超求解器 | O(K) | O(δε²) | 最简单的求解器 |
+| p阶超求解器 | O(Kp) | O(δε^(p+1)) | 改进版，仍有误差 |
+| **CfC（本文）** | **O(K̃)** | **Not relevant** | ✅ 无求解器，无误差概念 |
+
+右半部分：序列建模复杂度
+
+| 模型 | 序列预测 | 逐步预测 | 瓶颈 |
+|------|----------|----------|------|
+| RNN | O(nk) | O(k) | ✅ 每步只做矩阵乘法，线性扩展 |
+| ODE-RNN | O(nkp) | O(kp) | 每步还要跑ODE求解器，多乘一个 p |
+| Transformer | O(n²k) | O(nk) | 自注意力机制需要每个位置关注所有其他位置，n²爆炸 |
+| **CfC** | **O(nk)** | **O(k)** | ✅ 与 RNN 同级，无额外开销,但有连续时间表达能力 |
+
+
+💡 三个关键概念
+
+#### 1. 显式时间依赖（Explicit Time Dependence）
+| | ODE 网络 | CfC |
+|---|---|---|
+| 时间处理方式 | 藏在微分里，需逐步积分 | t 直接出现在公式里 |
+| 获得 x(t) 的方法 | 从 t=0 一步步算到 t | 直接代入 t 计算 |
+| 类比 | 每小时模拟一次天气才知道明天结果 | 直接用公式算出明天天气 |
+
+#### 2. K 与 K̃ 的区别
+| 变量 | 含义 | 典型值（以10秒数据为例）|
+|------|------|------------------------|
+| K̃ | 实际输入数据点数 | 10 个 |
+| K | ODE 求解器内部步数 | 1000~10000 个 |
+| p | 求解器阶数（如RK4） | 4 |
+
+> 复杂度差距：O(Kp) = 40000 次 vs O(K̃) = 10 次 → **差 4000 倍**
+
+<br>
+
+#### 3. 为什么 CfC 没有"近似误差"
+- ODE 求解器：**每次推理**都在做数值近似，误差随步数累积
+- CfC：近似只在**推导阶段**做了一次，之后每次推理都是精确计算该公式
+- 类比：π ≈ 3.14159 是一次性近似，之后每次用它算圆面积都是精确的
+
+<br>
+
+#### 序列预测效率
+
+<br>
+
+两种预测模式
+| 模式 | 输入 | 输出 | 应用场景 |
+|------|------|------|----------|
+| 序列预测 | 整段序列 [x₁,...,xₙ] | 一个标签/结果 | 读完整段再判断 |
+| 逐步预测（自回归） | 当前时刻 xₜ | 下一时刻 xₜ₊₁ | 实时预测下一步 |
+
+结论
+> CfC = **ODE 的表达能力** + **RNN 的计算效率**
+
+<br>
+
+#### CfC 作为灵活深度模型
+
+| 特性 | 说明 |
+|------|------|
+| 时间依赖门控 | σ(-f·t) 随时间变化，动态控制记忆，类似 LSTM 遗忘门但更灵活 |
+| 混合记忆架构（mmRNN） | CfC 嵌入 LSTM，LSTM 细胞状态负责长期记忆，缓解梯度消失 |
+| 效率提升 | 单位计算时间内精度比 ODE 模型提升 **超过 150 倍** |
+
+---
+
+#### 🎯 逻辑链
+
+```
+闭合解中 t 显式出现
+        ↓
+不需要 ODE 求解器迭代
+        ↓
+┌──────────────────────────────────┐
+│ 优势1：复杂度从O(Kp)降到O(K̃)   │ ← K̃ 比 K 小 1000 倍
+│ 优势2：无数值误差/不稳定性      │ ← 运行时不做近似
+│ 优势3：训练推理快 10~150 倍     │ ← 实验验证
+└──────────────────────────────────┘
+        ↓
+同时保持 ODE 的连续时间表达能力
+        ↓
+= RNN 的速度 + ODE 的表达力  ✅
+```
+
+---
+
+#### 精读
+
+- **🔵 显式时间依赖**
+
+💬 *"We then dissect the properties of the obtained closed-form solution and design a new class of neural network models we call closed-form continuous-depth networks (CfC).CfCs have an explicit time dependence in their formulation that does not require a numerical ODE solver to obtain their temporal rollouts."*
+
+📝 **我们接下来剖析所得闭合解的性质，并设计一类新的神经网络模型，称之为闭合形式连续深度网络（CfC）。CfC 的公式中显式地包含时间变量 t，因此不需要数值ODE求解器来展开其时间序列。**
+
+🧠 **"显式时间依赖"（Explicit Time Dependence）是什么意思？**
+
+**对比两种情况：**
+
+| **类型** | **例子** | **时间如何处理** |
+|---|---|---|
+| 隐式时间依赖（ODE 网络） | $$\dfrac{dx}{dt} = f(x, t)$$ | 时间藏在微分里，必须一步一步数值积分才能知道 $$x(t)$$ |
+| 显式时间依赖（CfC） | $$x(t) = \sigma(-f \cdot t) \odot g + (1 - \sigma(-f \cdot t)) \odot h$$ | $$t$$ 直接出现在公式里，给定 $$t$$ 直接算出 $$x(t)$$ |
+**生活类比：**
+
+- **ODE 方式** = 你想知道明天的天气，必须从今天开始，每隔 1 小时模拟一次大气变化，算 24 步才能得到答案
+- **CfC 方式** = 你有一个公式 $$\text{weather}(t)$$，直接把 $$t = 24\text{h}$$ 代入，瞬间得到答案
+
+**这就是为什么 CfC 不需要 ODE 求解器！** $$t$$ 已经在公式里了，直接代入计算即可。
+
+**🔑为什么这个积分难解？**
+想象I(s) 是一段真实的风速数据——它的形状完全不规则，没有任何数学规律，所以$\int_0^t f(I(s))\,ds$ 根本没有通用的解析公式。
+
+---
+
+💬 *"Thus, they maximize the trade-off between accuracy and efficiency of solvers.Formally, this property corresponds to obtaining lower time complexity for models without numerical instabilities and errors as illustrated in Table 1 (left).Table 1 (left) shows that the complexity of a pth-order numerical ODE solver is O(Kp), where K is the number of ODE steps, while a CfC system requires O( K̃), where is the exogenous input time steps, which are typically one to three orders of magnitude smaller than K.Moreover, the approximation error of a pth-order numerical ODE solver scales with $\mathcal{O}(\epsilon^{p+1})$, whereas CfCs are closed-form continuous-time systems, thus the notion of approximation error becomes irrelevant to them."*
+
+📝 **"因此，CfC 最大化了精度与求解效率之间的权衡。形式上，这一性质对应于在没有数值不稳定性和误差的情况下获得更低的时间复杂度，如表1（左）所示。表1（左）显示，p 阶数值ODE求解器的复杂度为 O(Kp)，而CfC系统只需 O(K̃)，其中 K̃是外部输入的时间步数，通常比 K 小1到3个数量级。 此外，p 阶数值ODE求解器的近似误差量级为 $\mathcal{O}(\epsilon^{p+1})$ 而CfC是闭合形式的连续时间系统，因此 "近似误差"的概念对它们而言根本不适用。这种显式时间依赖使得CfC在训练和推理时间上比ODE对应模型至少快一个数量级，且不损失精度。**
+
+🧠 **K 与 K̃ 的区别**
+| 变量 | 含义 | 典型值（以10秒数据为例）|
+|------|------|------------------------|
+| K̃ | 实际输入数据点数 | 10 个 |
+| K | ODE 求解器内部步数 | 1000~10000 个 |
+| p | 求解器阶数（如RK4） | 4 |
+
+复杂度差距：O(Kp) = 40000 次 vs O(K̃) = 10 次 → **差 4000 倍**
+
+🧠 **为什么 CfC 没有"近似误差"**
+- ODE 求解器：**每次推理**都在做数值近似，误差随步数累积
+- CfC：近似只在**推导阶段**做了一次，之后每次推理都是精确计算该公式
+- 类比：π ≈ 3.14159 是一次性近似，之后每次用它算圆面积都是精确的
+
+---
+- **🔵 序列与单步预测效率**
+
+💬 *"In sequence modelling tasks, one can perform predictions based on an entire sequence of observations, or perform auto-regressive modelling where the model predicts the next time-step output given the current time-step input."*
+
+📝 **"在序列建模任务中，可以基于整个观测序列做预测（序列预测），也可以做自回归建模，即给定当前时间步输入预测下一时间步输出（逐步预测）。**
+
+🧠 **序列预测 vs 逐步预测**
+
+| **模式** | **输入** | **输出** | **类比** |
+|---|---|---|---|
+| 序列预测 | 整段序列 $$[x_1, x_2, \ldots, x_n]$$ | 一个标签 / 结果 | 读完整篇文章再做判断 |
+| 逐步预测（自回归） | 当前时刻 $$x_t$$ | 下一时刻 $$x_{t+1}$$ | 每读一句话就预测下一句 |
+对**风场预测**课题来说，两种模式都可能用到：
+
+**序列预测** → 给定过去 N 小时风场，预测是否会发生风切变<br> 
+**逐步预测** → 实时预测下一时刻风场状态
+
+---
+
+💬 *"We observe that the complexity of ODE-based networks and Transformer modules is at least an order of magnitude higher than that of discrete RNNs and CfCs in both frameworks.This is desirable because not only do CfCs establish a continuous flow similar to ODE models to achieve better expressivity in representation learning but they do so with the efficiency of discrete RNN models."*
+
+📝 **"我们观察到，ODE网络和Transformer的复杂度比离散RNN和CfC高至少一个数量级。这是令人期待的，因为CfC不仅建立了类似ODE模型的连续流以实现更好的表示学习表达能力，而且是以离散RNN模型的效率做到这一点的。**
+
+🧠 **Table 1 右半部分逐行解读**
+ 设序列长度为 $$n$$，隐藏单元数为 $$k$$，ODE 求解器阶数为 $$p$$：
+
+| **模型** | **序列预测** | **逐步预测** | **直觉理解** |
+|---|---|---|---|
+| RNN | $$\mathcal{O}(nk)$$ | $$\mathcal{O}(k)$$ | 每步只做矩阵乘法，线性扩展 |
+| ODE-RNN | $$\mathcal{O}(nkp)$$ | $$\mathcal{O}(kp)$$ | 每步还要跑 ODE 求解器，多乘一个 $$p$$ |
+| Transformer | $$\mathcal{O}(n^2k)$$ | $$\mathcal{O}(nk)$$ | 自注意力机制需要每个位置关注所有其他位置，$$n^2$$ 爆炸 |
+| CfC | $$\mathcal{O}(nk)$$ | $$\mathcal{O}(k)$$ | 和 RNN 一样高效，但有连续时间表达能力 |
+
+**结论：CfC = ODE 的表达能力 + RNN 的计算效率**，这是它最吸引人的地方。
+
+---
+
+- **🔵 CfC：面向序列任务的灵活深度模型**
+
+💬 *"CfCs are equipped with novel time-dependent gating mechanisms that explicitly control their memory."*
+
+📝 **CfC配备了新颖的时间依赖门控机制，可以显式地控制其记忆。**
+
+🧠 **这里指的是公式(4)中的 σ(−f⋅t) 项——它随时间变化，控制"记住多少旧信息"和"接受多少新信息"，类似LSTM的遗忘门，但更加动态。**
+
+---
+
+💬 *"CfCs are as expressive as their ODE-based peers and can be supplied with mixed memory architectures to avoid gradient issues in sequential data processing applications with long-range dependences."*
+
+📝 **CfC与ODE对应模型具有同等的表达能力，并且可以与混合记忆架构结合，以避免长程依赖序列处理中的梯度问题。**
+
+🧠 **什么是"混合记忆架构"（Mixed Memory Architecture）？**
+
+这对应论文中的 CfC-mmRNN 变体。
+
+核心思想：把CfC嵌入到LSTM里，让LSTM的细胞状态（cell state）充当长期记忆，CfC负责连续时间动态建模。
+
+输入 → [CfC（连续时间动态）] → LSTM细胞状态（长期记忆） → 输出
+<br>
+
+🧠 **为什么需要这个？** 
+
+CfC本身可能有梯度消失问题（序列很长时），LSTM的门控机制可以缓解这个问题。对长时间风场序列预测，这个变体可能特别有用。
+
+---
+
+💬 *"Our results indicate that, when considering accuracy per compute time, CfCs exhibit over 150 fold improvements over ODE-based compartments."*
+
+📝 **我们的结果表明，在考虑单位计算时间内的精度时，CfC比ODE模块提升超过 150倍。**
+
+🧠 **"accuracy per compute time"是什么指标？**
+
+这不是单纯的精度，也不是单纯的速度，而是效率的综合衡量：
+
+$$\text{效率} = \frac{\text{模型精度（Accuracy）}}{\text{所需计算时间（Training/Inference Time）}}$$
+
+**举例：**
+
+- **ODE 模型：** 精度 90%，训练 1 小时 → 效率 $$= 90/60 = 1.5$$ 分/分钟
+- **CfC 模型：** 精度 91%，训练 1 分钟 → 效率 $$= 91/1 = 91$$ 分/分钟
+
+这就是"150 倍提升"的来源——**CfC 不仅快，而且精度不降甚至更高**。
+​
+
+---
+
+## 2.3 方法（Methods）
+
+### 核心公式记录
 
 **公式编号：** 论文公式(X)
 
@@ -206,6 +747,8 @@ $$
 **和上一个公式的关系：**
 
 ---
+
+
 
 ### 2.4 实验（Experiments）
 
