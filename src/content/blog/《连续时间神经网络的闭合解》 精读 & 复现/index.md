@@ -1,7 +1,7 @@
 ---
 title: '连续时间神经网络的闭合解 精读 & 复现'
 publishDate: 2026-03-06
-updatedDate: 2026-03-06
+updatedDate: 2026-03-17
 description: 'Here we go'
 tags:
   - 科研
@@ -724,6 +724,169 @@ $$\text{效率} = \frac{\text{模型精度（Accuracy）}}{\text{所需计算时
 ​
 
 ---
+### 🔷 ③ — 闭合解的推导.
+
+#### 本节目的：
+给 LTC 网络的动力学方程找到一个"不需要ODE求解器、可以直接算出答案"的近似公式，并证明这个近似足够精确。
+
+#### 🎯逻辑链：
+```
+LTC 的 ODE（精确但无法直接算）
+
+        ↓  [线性 ODE 标准解法：常数变易法]
+
+含积分的解析解（精确，但积分无法直接求）
+
+        ↓  [限定：分段常数输入]
+
+分段常数情况下的闭合解（精确）
+
+        ↓  [推广：用 f(I(t))·t 近似 ∫f(I(s))ds]
+
+任意输入下的近似闭合解 → 定理 1，公式 (2)
+
+        ↓  [验证]
+
+误差上界证明（紧性结果）+ 实践验证（MSE = 0.006）
+
+```
+
+#### LTC的ODE定义（公式1）
+
+$$
+\frac{d\mathbf{x}}{dt} = -\bigl[w_\tau + f(\mathbf{x}, \mathbf{I}, \theta)\bigr] \odot \mathbf{x}(t) + A \odot f(\mathbf{x}, \mathbf{I}, \theta)
+\tag{1}
+$$
+
+#### 符号表
+
+| 符号 | 维度 | 含义 |
+|------|------|------|
+| $\mathbf{x}(t)$ | $D\times1$ | 当前时刻隐藏状态向量（D个神经元） |
+| $\mathbf{I}(t)$ | $m\times1$ | 外部输入信号（m个特征） |
+| $w_\tau$ | $D\times1$ | 时间常数参数向量，控制衰减速度，**可学习** |
+| $A$ | $D\times1$ | 偏置向量，神经元的目标平衡值，**可学习** |
+| $f(\cdot;\theta)$ | — | 由 $\theta$ 参数化的神经网络（模拟突触非线性） |
+| $\odot$ | — | Hadamard积（逐元素相乘） |
+
+#### 方程结构拆解
+
+$$\underbrace{\frac{d\mathbf{x}}{dt}}_{\text{状态变化率}} = \underbrace{-w_\tau \odot \mathbf{x}(t)}_{\text{自然衰减}} \underbrace{- f(\mathbf{x},\mathbf{I},\theta)\odot\mathbf{x}(t)}_{\text{输入调制衰减}} + \underbrace{A \odot f(\mathbf{x},\mathbf{I},\theta)}_{\text{突触驱动项}}$$
+
+**直觉理解**
+
+> 神经元状态像一个弹簧：总在向"平衡点 $A$"靠近，
+> 但靠近的**速度**和**平衡点位置**都随输入 $I(t)$ 动态变化。
+> 这就是"液态（Liquid）"的核心含义。
+
+**为什么难以直接求解？**
+
+- $f$ 依赖于 $\mathbf{x}(t)$（可能有循环连接），使ODE**非线性**
+- 即使简化为单神经元、无循环连接，指数上仍含有积分 $\int_0^t f(I(s))ds$，无法直接计算
+
+---
+
+#### 定理1（Theorem 1）
+
+**定理条件**
+
+- 单个神经元（标量情况，$D=1$）
+- 单维外部输入 $I(t)$
+- 无自连接（$f$ 不依赖 $x(t)$）
+
+**定理结论（公式2）**
+
+$$
+x(t) \approx (x_0 - A)\, e^{-[w_\tau + f(I(t),\theta)]\,t} \cdot f(-I(t), \theta) + A
+\tag{2}
+$$
+
+**逐项理解**
+
+| 项 | 表达式 | 含义 |
+|---|---|---|
+| 初始偏差 | $(x_0 - A)$ | 初始状态距平衡点的距离 |
+| 指数衰减 | $e^{-[w_\tau + f(I(t),\theta)]\,t}$ | 以动态速率衰减，速率由当前输入决定 |
+| 调制因子 | $f(-I(t), \theta)$ | 对负输入的非线性变换，起互补调制作用 |
+| 平衡点 | $+ A$ | 系统长期趋向的目标值，$t\to\infty$ 时 $x(t)\to A$ |
+
+#### ⚠️ 近似的本质
+
+原本精确解中，指数上应为：
+
+$$e^{-\int_0^t [w_\tau + f(I(s),\theta)]\,ds}$$
+
+作者用以下替换完成近似：
+
+$$\int_0^t f(I(s),\theta)\,ds \quad \longrightarrow \quad f(I(t),\theta) \cdot t$$
+
+**为什么这个近似合理？**
+
+- 误差出现在指数的指数位置
+- 当 $w_\tau > 0$ 时，误差项被 $e^{-w_\tau t}$ 压制，**随时间指数衰减**
+- 误差上界 $= |x_0 - A| \cdot e^{-w_\tau t}$（紧的，即最优界）
+
+---
+
+#### 精读
+
+**🔵 数学推导 & 实践中的紧性检验**
+
+💬 *"In this section, we derive an approximate closed-form solution for LTC networks, an expressive subclass of time-continuous models.We discuss how the scalar closed-form expression derived from a small LTC system can inspire the design of CfC models.In this regard, we define the LTC semantics.We then state the main theorem that computes a closed-form approximation of a given LTC system for the scalar case.To prove the theorem, we first find the integral solution of the given LTC ODE system.We then compute a closed-form analytical solution for the integral solution for the case of piecewise constant inputs.Afterward, we generalize the closed-form solution of the piecewise constant inputs to the case of arbitrary inputs with our novel approximation...and finally provide sharpness results (that is, measure the rate and accuracy of an approximation error) for the derived solution."*
+
+📝 **在本节中，我们为LTC网络推导一个近似的闭合解，LTC网络是时间连续模型中一个表达能力很强的子类。我们讨论如何从一个小型LTC系统推导出的标量闭合表达式，来启发CfC模型的设计。为此，我们首先定义LTC的语义（即它的数学形式）。然后我们陈述主定理，该定理给出了标量情况下LTC系统的闭合近似解。为了证明该定理，我们首先求出LTC ODE系统的积分解。然后，我们针对分段常数输入的情况，计算出积分解的闭合解析解。之后，我们通过新颖的近似方法，将分段常数输入的闭合解推广到任意输入的情况。最后，为推导出的解提供紧性结果（即衡量近似误差的速率和精度）。**
+
+🧠 **分段常数输入：把输入信号 I(t) 看成一段一段的常数（像楼梯一样），在每一小段内 I(t) 不变。这是一个特殊情况，在这种情况下积分  f(I(s))ds 可以被精确计算出来。**
+
+---
+
+💬 *"The hidden state of an LTC network is determined by the solution of the following initial value problem (IVP): "*
+$$ 
+\frac{d\mathbf{x}}{dt} = -\bigl[w_\tau + f(\mathbf{x}, \mathbf{I}, \theta)\bigr] \odot \mathbf{x}(t) + A \odot f(\mathbf{x}, \mathbf{I}, \theta)\tag{1} 
+$$
+
+📝 **LTC网络的隐藏状态由以下初值问题（IVP）的解决定。**
+
+| **项** | **生物含义** | **数学作用** |
+|--------|------------|------------|
+| $\dfrac{dx}{dt}$ | 膜电位的变化速率 | 方程左边，我们要求解的量 |
+| $-w_\tau \odot \mathbf{x}(t)$ | 神经元自然衰减 | 把状态拉向 0 |
+| $-f(\mathbf{x}, \mathbf{I}, \theta) \odot \mathbf{x}(t)$ | 突触电导调制衰减 | 输入越强，衰减越快 |
+| $A \odot f(\mathbf{x}, \mathbf{I}, \theta)$ | 突触驱动项 | 把状态拉向目标值 A |
+
+💡 **直觉：** 这个方程就像一个弹簧——神经元状态总在往某个"平衡点"靠近，但这个平衡点和靠近速度都会随输入 $I(t)$ 动态变化，这就是"液态"的精髓。
+
+---
+
+💬 *"...where at a time step t, x(D×1)(t) defines the hidden state of a LTC layer with D cells, and I(m×1)(t) is an exogenous input to the system with m features.Here, w(D×1)τ is a time-constant parameter vector, A(D×1) is a bias vector, f is a neural network parametrized by θ and ⊙ is the Hadamard product.The dependence of f(.) on x(t) denotes the possibility of having recurrent connections."*
+
+📝 **其中在时间步 t，$\mathbf{x}^{(D\times1)}(t)$ 定义了含 D 个神经元的 LTC 层的隐藏状态，$\mathbf{I}^{(m\times1)}(t)$ 是系统的外部输入，有 m 个特征。 这里 $w_\tau^{(D\times1)}$ 是时间常数参数向量，$A^{(D\times1)}$ 是偏置向量，$f$ 是由 $\theta$ 参数化的神经网络，$\odot$ 是 Hadamard 积。f(.) 对 x(t) 的依赖表示网络可以有循环连接。**
+
+🧠 **上标 $(D \times 1)$ 说明这是一个列向量，D 是神经元数量。对风场而言，m 就是风速、风向、气压等传感器特征的数量。**
+
+🧠 **$w_\tau$：控制每个神经元衰减的快慢，可学习**。
+
+🧠 **$A$：每个神经元的"目标平衡值"，可学习。**
+
+🧠 **Hadamard 积：就是两个同维向量逐元素相乘，例如 $[1,2] \odot [3,4] = [3,8]$，区别于矩阵乘法。**
+
+🧠 **如果 $f$ 的输入包含当前隐藏状态 $\mathbf{x}(t)$，那么神经元之间就有反馈连接（即循环神经网络的特性）。这使得 ODE 更难求解，但表达能力更强。**
+
+---
+
+💬 *"The full proof of theorem 1 is given in Methods. The theorem formally demonstrates that the approximated closed-form solution for the given LTC system is given by equation (2) and that this approximation is tightly bounded with bounds given in the proof."*
+
+📝 **定理1的完整证明在Methods部分给出。该定理正式证明了LTC系统的近似闭合解由公式(2)给出，且该近似的误差界在证明中被严格给出。**
+
+---
+
+💬 *"Figure 2 shows an LTC-based network trained for autonomous driving. The figure further illustrates how close the proposed solution fits the actual dynamics exhibited from a single-neuron ODE given the same parametrization.We next show how to design a novel neural network instance inspired by this closed-form solution that has well-behaved gradient properties and approximation capabilities."*
+
+📝 **图2展示了一个为自动驾驶训练的LTC网络，进一步说明了在相同参数化下，所提出的解与单神经元ODE实际动态的吻合程度。接下来我们展示如何从这个闭合解出发，设计一个具有良好梯度性质和近似能力的新型神经网络实例。**
+
+---
+
+
 
 ## 2.3 方法（Methods）
 
@@ -895,10 +1058,11 @@ class CfCCell(nn.Module):
 
 ---
 
-## 九、📅 阅读日志
+## 九、📅 精读 & 复现日志
 
 | 日期 | 完成内容 | 用时 | 备注 |
 |------|---------|------|------|
 | 2026-03-06 | 建立模板 | 2h | 无 |
 | 2026-03-07 | 推进完摘要 & 引言前两段 | 3h | 术语较多，需复习 |
+| 2026-03-16 & 17 | 推进完理论部分 | 8h | 数学基础需加强 |
 | | | | |
