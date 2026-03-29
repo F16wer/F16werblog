@@ -1,7 +1,7 @@
 ---
 title: '26春训练'
 publishDate: 2026-02-20
-updatedDate: 2026-02-20
+updatedDate: 2026-03-29
 description: '旧的不去，新的不来'
 tags:
   - 算法竞赛训练
@@ -66,7 +66,15 @@ PS：原定的天梯赛因笔者选拔赛时身心不适退赛。
 <br> 背包DP T2（01背包）[P1833 樱花](https://www.luogu.com.cn/problem/P1833).
 
 3/21 —— [浪潮杯校赛](https://f16wer.com/blog/%E6%B5%AA%E6%BD%AE%E6%9D%AF%E6%A0%A1%E8%B5%9B%E6%B8%B8%E8%AE%B0/).
- 
+
+3/28 & 29 —— [蓝桥杯 2025 省A c++](https://www.luogu.com.cn/training/748106#problems).（能力所限，只写简单题）
+<br> [P12138 [蓝桥杯 2025 省 A] 寻找质数](https://www.luogu.com.cn/problem/P12138).
+<br> [P12139 [蓝桥杯 2025 省 A] 黑白棋](https://www.luogu.com.cn/problem/P12139)
+<br> [P12140 [蓝桥杯 2025 省 A] 抽奖](https://www.luogu.com.cn/problem/P12140)
+<br> [P12141 [蓝桥杯 2025 省 A] 红黑树](https://www.luogu.com.cn/problem/P12141)
+<br> [P12143 [蓝桥杯 2025 省 A] 好串的数目](https://www.luogu.com.cn/problem/P12143)
+<br> [P12144 [蓝桥杯 2025 省 A] 地雷阵](https://www.luogu.com.cn/problem/P12144)
+
 <br>PS：思来想去，决定这里只放题号，按月另开帖子po代码，全放这还是太挤了些。
 
 
@@ -78,6 +86,8 @@ PS：原定的天梯赛因笔者选拔赛时身心不适退赛。
 > <br>  对于memset“上限”，一般填0x3f，但在程序当中检测“是否有更新过”时，则不是0x3f，实际大小是0x很多个3f，有效的检测办法是>1e18.<br>
 > <br>  计数时，用 a[++cnt] 而不是 cnt+=1 可以有效防止“多加一次”问题.
 > <br>  注意变量名字冲突问题，命名得有意义一些是一个有效的办法.
+> <br>  深搜时每写一个dfs() 一定要在后面记得加return 和 复位.
+> <br>  某值从1到n环形移动时,考虑边界的整除问题，正确的代码是a = (a + x - 1) % n + 1;
 
 多测清空问题：
 > <br> 对于数组：
@@ -95,8 +105,11 @@ PS：原定的天梯赛因笔者选拔赛时身心不适退赛。
 
 预处理：
 > <br> 对于一些无法避免的枚举层数较多的问题（如[AcWing 1221](https://www.acwing.com/problem/content/1223/)），可以预先计算并存储。
-
+> <br>
 > <br> 可以考虑对 某组输入数据 依据某项值（如时间/大小）进行预处理（如排序）来简化后续处理 如sort(a,a+n).
+
+数论:
+> <br> 找质数要从2开始找.
 
 
 ## 已经复习过的算法复述
@@ -128,6 +141,48 @@ struct node{
   bool operator>(const node& a) const{return dis > a.dis;}
 };
 priority_queue<node vector<node>,greater<node>>;
+```
+
+6 排序STL模板
+```c++
+sort(v.begin(), v.end());//vector的排序（从小到大）
+sort(v.begin(), v.end(), cmp);//自定义比较函数 （也有用结构体＋重载运算符的操作） 
+sort(arr, arr + n);//普通数组排序 
+sort(arr + 1, arr + 3);//局部排序
+
+bool cmp(const Student& a, const Student& b) {
+    if (a.score != b.score) {
+        // 第一优先级：分数不同时，分数高的排前面（降序）
+        return a.score > b.score; 
+    } else {
+        // 第二优先级：分数相同时，学号小的排前面（升序）
+        return a.id < b.id; 
+    }
+}//以成绩排序为例的一个cmp函数模板
+```
+
+7 区间合并：遇到了如[P12144 [蓝桥杯 2025 省 A] 地雷阵](https://www.luogu.com.cn/problem/P12144)的题目，<br>存在多个区间而需要求解“覆盖了多少”的问题。<br>
+可以通过：先对所有区间按左端点顺序进行排序，如排在后面的区间的左端点出现在了目前区间的右端点的前面——把目前区间的右端点更新至后面区间的右端点，在扫描完目前区间的右端点时把该区间合并，存至另外一个数组。<br>
+简而言之：在排序完区间后维护右端点直到无重合且离开区间。<br>
+
+8 三角函数：c++里的函数主要以弧度形式存在
+| **函数名** | **数学含义** | **参数要求** | **返回值范围** |
+| :--- | :--- | :--- | :--- |
+| `sin(x)` | 正弦 $$\sin(x)$$ | 弧度值 | $$[-1, 1]$$ |
+| `cos(x)` | 余弦 $$\cos(x)$$ | 弧度值 | $$[-1, 1]$$ |
+| `tan(x)` | 正切 $$\tan(x)$$ | 弧度值 | $$(-\infty, +\infty)$$ |
+| `asin(x)` | 反正弦 $$\arcsin(x)$$ | 必须在 $$[-1, 1]$$ 之间 | $$[-\pi/2, \pi/2]$$ |
+| `acos(x)` | 反余弦 $$\arccos(x)$$ | 必须在 $$[-1, 1]$$ 之间 | $$[0, \pi]$$ |
+| `atan2(y, x)` | 全象限反正切 | 坐标 $$(y, x)$$ | $$(-\pi, \pi]$$ |
+
+度数转化为角度模板
+```c++
+#include <cmath>
+
+const double PI = acos(-1.0);//获取pi
+double degree;
+double radian = degree * (PI / 180.0); // 将 度数 转换为 弧度
+
 ```
 
 ## 待办
