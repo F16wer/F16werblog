@@ -1,7 +1,7 @@
 ---
 title: '连续时间神经网络的闭合解 精读 & 复现'
 publishDate: 2026-03-06
-updatedDate: 2026-03-17
+updatedDate: 2026-04-5
 description: 'Here we go'
 tags:
   - 科研
