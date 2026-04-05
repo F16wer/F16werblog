@@ -1066,47 +1066,326 @@ CfC 中 $t$ 的设置方式取决于任务类型：
  ⭐ **与本组研究的关联：** 风场数据因突变导致的缺失，本质上是**不规则采样时间序列**问题，CfC 原生支持非均匀时间戳输入，天然适配。
 
 
+
 # 三、💻 代码复现记录
 
-## 3.1 环境配置
+## 3.1 预测实验1
+
+### 环境配置
+
+    conda create -n cfc311 python=3.11 -y
+    conda activate cfc311
+
+> ⚠️ 必须使用 Python 3.11，Python 3.13 不被 PyTorch 支持。
+
+    pip install --pre torch torchvision torchaudio --index-url https://download.pytorch.org/whl/nightly/cu128 --no-cache-dir
+
+> ⚠️ RTX 5060 是 Blackwell 架构（sm_120），必须使用 cu128 nightly 版本。cu130 / cu131 的 wheel 不存在，不要尝试。
+
+验证 GPU 是否可用：
+
+    python -c "import torch; print(torch.__version__); print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))"
+
+**安装项目依赖**
+
+    pip install pytorch-lightning==1.9.5
+    pip install torchmetrics==0.9.3
+    pip install numpy==1.26.4
+    pip install pandas scikit-learn matplotlib
+
+**版本兼容说明**
+
+| 包 | 版本 | 原因 |
+|---|---|---|
+| Python | 3.11 | 3.13 不兼容 PyTorch |
+| PyTorch | nightly + cu128 | RTX 5060 Blackwell 架构需要 |
+| pytorch-lightning | 1.9.5 | 新版移除了 gpus=1、validation_epoch_end 等旧接口 |
+| torchmetrics | 0.9.3 | 新版 accuracy() 要求传 task 参数，旧代码不兼容 |
+| NumPy | 1.26.4 | NumPy 2.0 移除了 np.Inf，PL 1.9.5 内部仍使用旧写法 |
+
+---
+
+### 下载项目代码
+
+    git clone https://github.com/raminmh/CfC.git
+    cd CfC
+
+---
+
+### 代码修改记录
+
+**修改 1：修复数据下载 URL（duv_physionet.py）**
+
+原始 URL 末尾含有 ?download，导致 Windows 文件名非法字符报错。
+
+    # 原始代码（报错）
+    "https://physionet.org/files/challenge-2012/1.0.0/set-a.tar.gz?download"
+    
+    # 修改后
+    "https://physionet.org/files/challenge-2012/1.0.0/set-a.tar.gz"
+
+**修改 2：修复 torch.load 安全策略（duv_physionet.py，约第 220、228 行）**
+
+PyTorch 2.6+ 默认 weights_only=True，需要显式关闭。
+
+    # 原始代码（报错）
+    self.data = torch.load(os.path.join(self.processed_folder, data_file))
+    
+    # 修改后（注意括号位置，weights_only 是 torch.load 的参数，不是 join 的参数）
+    self.data = torch.load(os.path.join(self.processed_folder, data_file), weights_only=False)
+
+**修改 3：修复 DataLoader 多进程问题（train_physio.py）**
+
+Windows 的 spawn 多进程机制无法序列化 lambda 函数。
+
+    # 原始代码（报错）
+    DataLoader(..., num_workers=4, ...)
+    
+    # 修改后
+    DataLoader(..., num_workers=0, ...)
+
+---
+
+### 运行训练
+
+    cd CfC
+    python train_physio.py
+
+- 脚本会自动重复训练 **5 次**，取均值作为最终结果
+- 模型参数量：约 92.9K
+- 数据集自动下载，无需手动操作
+
+---
+
+### 可忽略的警告
+
+    LightningDeprecationWarning: Setting `Trainer(gpus=1)` is deprecated in v1.7
+
+    You are using a CUDA device that has Tensor Cores. To properly utilize them,
+    you should set torch.set_float32_matmul_precision('medium' | 'high')
+
+如需开启 Tensor Core 加速（大模型推荐），可在代码开头添加：
+
+    import torch
+    torch.set_float32_matmul_precision('medium')
+
+---
+
+### 复现结果
+
+![训练日志](./Experiment1.png)
+| 指标 | 复现值 | 论文报告值 |
+|---|---|---|
+| Test AUC | 0.8364 ± 0.0925 | ~0.859 |
+| 训练 Epoch | 57 | — |
+| 单次训练耗时 | ~0.26 min | — |
+| 设备 | RTX 5060 Laptop GPU | — |
+
+> 📝 说明：复现值与论文值存在一定差距，可能原因：随机种子不固定、超参数配置差异、硬件环境不同。总体趋势与论文一致，AUC 显著优于 ODE-based baseline。
+
+---
+
+### 踩坑汇总
+
+| # | 错误信息 | 原因 | 解决方案 |
+|---|---|---|---|
+| 1 | No matching distribution found for torch | Python 3.9 太旧，nightly wheel 不支持 | 改用 Python 3.11 |
+| 2 | sm_120 is not compatible with current PyTorch | RTX 5060 Blackwell 架构，旧版不识别 | 安装 nightly cu128 |
+| 3 | Trainer.__init__() got unexpected argument 'gpus' | pytorch-lightning 版本太新 | 降级到 1.9.5 |
+| 4 | Support for validation_epoch_end has been removed | pytorch-lightning 2.x API 变更 | 降级到 1.9.5 |
+| 5 | accuracy() missing 1 required argument 'task' | torchmetrics 版本太新 | 降级到 0.9.3 |
+| 6 | np.Inf was removed in NumPy 2.0 | NumPy 版本太新 | 降级到 1.26.4 |
+| 7 | Can't pickle local object lambda | Windows 多进程不支持 lambda 序列化 | num_workers 设为 0 |
+| 8 | torch.load weights_only 报错 | PyTorch 2.6+ 安全策略变更 | 加 weights_only=False |
+
+---
+
+## 3.2 预测实验2
+
+### 环境配置
 
 ```bash
-# 记录你实际用的命令
-pip install ...
-```
+# 创建并激活虚拟环境
+conda create -n cfc_env python=3.11
+conda activate cfc_env
 
-**遇到的问题及解决方案：**
-- 问题1：`报错信息`
-  - 解决：`解决方法`
+# 克隆官方仓库
+git clone https://github.com/raminmh/CfC
+cd CfC
+
+# 安装依赖
+pip install tensorflow
+pip install numpy
+pip install scikit-learn
+```
 
 ---
 
-## 3.2 核心模块理解
+### 遇到的问题 & 解决方案
+
+**问题1：TensorFlow Deprecated 警告**
+
+**报错信息：**
+
+```
+WARNING:tensorflow:The name tf.losses.sparse_softmax_cross_entropy is deprecated.
+WARNING:tensorflow:The name tf.get_default_graph is deprecated.
+WARNING:tensorflow:The name tf.ragged.RaggedTensorValue is deprecated.
+```
+
+**原因：** 官方仓库代码基于 TF1 风格编写，在 TF2 环境下运行会触发大量兼容性警告。
+
+**解决：** 这些均为警告而非报错，**不影响运行结果**，直接忽略即可。如需屏蔽 oneDNN 相关提示，可设置环境变量：
+
+```bash
+# Windows
+set TF_ENABLE_ONEDNN_OPTS=0
+```
+
+---
+
+**问题2：`tf.keras` 与 `keras` 独立包冲突**
+
+**报错信息：**
+
+```
+ValueError: tf.keras is not supported when using TensorFlow 2.16+.
+Please use the `keras` package directly.
+```
+
+**原因：** TF 2.16 起，`tf.keras` 已被剥离为独立的 `keras` 包，官方仓库的 `import` 方式不再兼容。
+
+**解决：** 降级 TensorFlow 版本至 2.15 以下：
+
+```bash
+pip install tensorflow==2.15
+```
+
+---
+
+**问题3：`numpy` 版本不兼容**
+
+**报错信息：**
+
+```
+AttributeError: module 'numpy' has no attribute 'bool'.
+```
+
+**原因：** NumPy 1.24 起移除了 `np.bool`、`np.int`、`np.float` 等别名，而旧版 TF 内部仍在使用这些已废弃的写法。
+
+**解决：** 降级 NumPy 版本：
+
+```bash
+pip install numpy==1.23.5
+```
+
+---
+
+**问题4：`scikit-learn` 接口变更**
+
+**报错信息：**
+
+```
+TypeError: MSELoss.__init__() got an unexpected keyword argument 'squared'
+```
+
+**原因：** `sklearn` 新版本中 `mean_squared_error` 的 `squared` 参数已被移除或重命名。
+
+**解决：** 降级 scikit-learn：
+
+```bash
+pip install scikit-learn==1.2.2
+```
+
+---
+
+**问题5：CUDA / GPU 不可用（仅 CPU 运行）**
+
+**提示信息：**
+
+```
+Could not load dynamic library 'cudart64_110.dll'; dlerror: cudart64_110.dll not found
+```
+
+**原因：** 本机未配置 CUDA 环境，TensorFlow 自动回退到 CPU 模式运行。
+
+**解决：** CPU 模式下可正常完成复现，训练速度略慢但结果不受影响。若需 GPU 加速，需另行配置 CUDA 11.x + cuDNN 8.x 环境。
+
+---
+
+### 核心模块理解
 
 ```python
-# 粘贴关键代码，加上自己的注释
+# CfCCell 核心前向传播逻辑（对应论文公式 4）
 class CfCCell(nn.Module):
     def forward(self, x, h, t):
-        # 这里对应论文公式(4)
-        # gate = sigma(-f*t) 就是时间门控
+        # 时间门控：σ(-f·t)
+        # t 越大 → gate 越小 → 越依赖新输入 x
+        # t 越小 → gate 越大 → 越依赖历史状态 h
         gate = torch.sigmoid(-f * t)
-        ...
+
+        # 闭合形式近似，完全绕开 ODE 数值求解器
+        new_h = gate * h + (1 - gate) * self.backbone(x)
+
+        return new_h
 ```
 
-**代码和公式的对应关系：**
+代码和公式的对应关系：
+
 | 代码变量 | 论文符号 | 含义 |
-|---------|---------|------|
-| `gate`  | $$\sigma(-f \cdot t)$$ | 时间门控 |
-|         |         |      |
+|---|---|---|
+| `gate` | σ(-f·t) | 时间门控，控制信息衰减 |
+| `f` | f | 可学习的时间衰减参数 |
+| `t` | t | 时间间隔（elapsed time） |
+| `h` | h(t) | 历史隐状态 |
+| `new_h` | x̃(t) | 更新后的隐状态输出 |
+| `self.backbone(x)` | g_θ(x) | 输入特征映射网络 |
 
 ---
 
-## 3.3 实验复现结果
+### 复现结果
 
-| 实验 | 论文报告值 | 我的复现值 | 差异原因分析 |
-|------|----------|----------|------------|
-| 人体活动识别 | 87.04% | | |
-| Walker2D MSE | 0.617 | | |
+运行命令：
+
+```bash
+python train_walker.py
+```
+
+训练日志（最后 5 个 epoch）：
+![训练日志](./Experiment2.png)
+```
+61/61 - 1s - loss: 0.6262 - 771ms/epoch - 13ms/step
+61/61 - 1s - loss: 0.6313 - 763ms/epoch - 13ms/step
+61/61 - 1s - loss: 0.6341 - 742ms/epoch - 12ms/step
+61/61 - 1s - loss: 0.6347 - 611ms/epoch - 10ms/step
+61/61 - 1s - loss: 0.6405 - 620ms/epoch - 10ms/step
+MSE: 0.63496 ± 0.00741
+```
+
+与原论文结果对比：
+
+| 模型 | 原论文 MSE ↓ | 复现 MSE ↓ | 状态 |
+|---|---|---|---|
+| LSTM | 2.35 ± 0.08 | — | 基线参考 |
+| ODE-RNN | 1.97 ± 0.13 | — | 基线参考 |
+| LTC (ODE solver) | 1.60 ± 0.11 | — | 基线参考 |
+| CfC (no-gate) | 0.63 ± 0.05 | **0.63496 ± 0.00741** | ✅ 复现成功 |
+
+> 复现结果与论文高度吻合，均值偏差仅 +0.005，且标准差更小，说明结果稳定。🎉
+
+---
+
+## 3.3 实验环境信息
+
+| 配置项 | 详情 |
+|---|---|
+| 操作系统 | Windows 11 |
+| Python 版本 | 3.11 |
+| 虚拟环境管理 | conda |
+| TensorFlow 版本 | 2.15 |
+| NumPy 版本 | 1.23.5 |
+| scikit-learn 版本 | 1.2.2 |
+| 硬件 | CPU（支持 AVX512，无 GPU） |
 
 ---
 
@@ -1126,27 +1405,96 @@ class CfCCell(nn.Module):
 
 # 五、💡 个人思考与创新想法
 
-### 7.1 我认为这篇论文最聪明的地方
->
+## 5.1 我认为这篇论文最聪明的地方
 
-### 7.2 我觉得还可以改进的地方
->
+ 用**近似的方式**绕开了 ODE 求解器。
 
-### 7.3 和我课题结合的想法
->
-
-### 7.4 读完后新产生的问题
-- 
-- 
+ 传统的 LTC 网络虽然理论上很优雅，但每次前向传播都要调用数值求解器（如 Euler、RK4），
+ 计算代价极高，难以实际部署。CfC 的核心贡献是：
+ **既然 ODE 的解析解求不出来，那就用一个可学习的闭合形式去逼近它。**
 
 ---
 
+## 5.2 我觉得还可以改进的地方
 
-#        六、📅 精读 & 复现日志
+ - **时间间隔 `t` 的获取方式过于简单**：当前实现中 `t` 是固定输入，
+   但在真实场景（如医疗时序数据）中，采样间隔往往不规则且带噪声，
+   论文对此处理得比较粗糙。
+
+ - **仅在 Walker2d 等低维任务上验证**：实验数据集维度较低，
+   缺乏在高维、长序列任务（如语言建模、视频理解）上的验证。
+
+ - **可解释性不足**：闭合形式是近似拟合出来的，
+   其生物神经元的对应意义相比 LTC 更弱，论文在这一点上论述较少。
+
+---
+
+## 5.3 和我课题结合的想法
+
+ CfC 网络在以下几个维度与我的课题高度契合：
+
+ - **不规则时序采样的天然适配**：气象观测站的风速、风向数据往往因设备故障、
+   遮挡或通信中断而产生**不规则的缺失片段**。CfC 的时间门控机制以时间间隔 `t`
+   作为显式输入，能够感知"距上一次有效观测过了多久"，
+   从而在补全缺失数据时比传统 LSTM 更具物理合理性。
+
+ - **风切变的连续动态建模**：风切变本质上是风场在空间或时间上的**连续变化过程**，
+   而非离散跳变。CfC 继承自 LTC 的连续时间动力学特性，
+   理论上比离散 RNN 更适合捕捉这种平滑但快速演化的物理过程。
+
+ - **替换补全模型中的序列编码器**：若课题现有方案使用了 LSTM 或 GRU
+   作为时序编码器，可以尝试将其替换为 CfC Cell，
+   在缺失率较高（如 30%～50%）的场景下对比两者的插值精度，
+   作为一组有说服力的消融实验。
+
+ - **灾害预警的实时性需求**：CfC 去掉了 ODE 数值求解器，
+   推理延迟极低，适合部署在机场或气象站的**实时风切变预警系统**中，
+   满足航空安全对响应速度的严苛要求。
+
+---
+
+## 5.4 读完后新产生的问题
+
+ - CfC 的闭合形式近似，在**极长序列**（如 10,000+ 步）下梯度是否仍然稳定？
+
+ - 论文中的 `no-gate` 变体表现最好，这是否意味着门控机制在某些任务上是**负优化**？
+   背后的理论解释是什么？
+
+ - 如果把 `t`（时间间隔）替换为**可学习的动态变量**，而不是外部输入，
+   模型的表达能力会有怎样的变化？
+
+ - CfC 是否可以和 **Transformer 的注意力机制结合**，
+   构建一个既有全局依赖建模能力、又有连续时间动态的混合架构？
+
+---
+
+## 5.5 复现过程中的经验
+
+ - 应当详细参照论文中给出的环境配置去复现，笔者在复现过程中遭遇了诸多“版本不一致”导致的问题，付出了诸如 被迫修改代码 & 结果受轻微影响 等学费。
+
+ - 有机会的话找一些好的复现配置去做，如想办法搞到超算中心账号 / 租卡 ，笔者的游戏本跑实验所需时间过长，等待的过程实在无聊。
+
+
+# 六、📅 日志
 
 | 日期 | 完成内容 | 用时 | 备注 |
 |------|---------|------|------|
 | 2026-03-06 | 建立模板 | 2h | 无 |
 | 2026-03-07 | 推进完摘要 & 引言前两段 | 3h | 术语较多，需复习 |
 | 2026-03-16 & 17 | 推进完理论部分 | 8h | 数学基础需加强 |
+| 3月底至4月份 | 复现 | 15h+ | 无 |
 | | | | |
+
+# 七、有感
+
+这是笔者第一次做“读论文，复现论文”的工作，甚至说是第一次涉猎“科研”相关工作，遭遇了诸多问题，不过还是感谢在宿舍死磕的自己，最后还是完成了师姐给的任务，自己也有所长进。<br>
+<br>
+我又想起来那句“完成比完美更重要”。<br>
+<br>
+是的，笔者的数学水平并不足以完完全全的领略本论文的全部细节，笔者的代码水平也完全不能在本论文代码的基础上玩出什么很新的花样。<br>
+<br>
+但屏幕上出现的一行行结果足以说明很多东西。<br>
+<br>
+我想，比起通过进行 python——numpy——机器学习——深度学习——模型，高数——概率论——，等等等等复杂的耗时耗力的学习 建立起一个深厚的底子后再推进科研工作，我更喜欢边做边学——它更切实际些。<br>
+<br>
+期待后续的科研实践。
